@@ -10,11 +10,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2/dist/sweetalert2.min.css">
 </head>
 <body class="bg-dark">
-    <h1 class="bg-warning text-white p-4 text-center head">XMLhttpRequest
+    <header class="bg-warning text-white p-2 d-flex align-items-center head">
+        <h1 class="flex-grow-1 text-center">XMLhttpRequest</h1>
         <button class="btn btn-dark icon" id="showsidebar">
             <i class="fa-solid fa-bars"></i>
         </button>
-    </h1>
+        <div class="text-right">
+            <button class="btn btn-dark" id="PostApi">
+                PostApi Call
+            </button>
+            <button class="btn btn-dark text-right" id="ToDoApi">
+                ToDoApi Call
+            </button>
+        </div>
+    </header>
     
     <aside class="sidebar" id="opensidebar">
         <div class="cancel text-right">
@@ -63,15 +72,10 @@
 
 
     <div class="container mt-130">
-        <div class="row">
-            <div class="col-md-8 offset-md-2 d-flex flex-column-reverse" id="postcontainer">
-
-            </div>
+        <div class="row" id="postcontainer">
         </div>
     </div>
 
-
-    
     <div class="backdrop" id="backdrop">
     </div>
 
