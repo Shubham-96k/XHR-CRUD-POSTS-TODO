@@ -1,6 +1,7 @@
 const cl = console.log;
 
 const posts = document.getElementById("postcontainer");
+const todo = document.getElementById("todocontainer");
 const showsidebar = document.getElementById("showsidebar");
 const opensidebar = document.getElementById("opensidebar");
 const hidesidebar = document.getElementById("hidesidebar");
@@ -9,6 +10,8 @@ const addbtn = document.getElementById("addbtn");
 const updatebtn = document.getElementById("updatebtn");
 const PostApi = document.getElementById("PostApi");
 const ToDoApi = document.getElementById("ToDoApi");
+const tbody = document.getElementById("tbody");
+const statuss = document.getElementById("statuss");
 
 //#######Get Form Controls #########
 
@@ -17,8 +20,8 @@ const titleControl = document.getElementById("title");
 const bodyControl = document.getElementById("body");
 const useridControl = document.getElementById("userid");
 
-let postArray = [];
-cl(postArray);
+let array = [];
+cl(array);
 
 let baseurl = `https://jsonplaceholder.typicode.com`;
 let posturl = `${baseurl}/posts`;
@@ -47,39 +50,18 @@ const templatingofPosts = eve => {
 }
 
 const templatingoftodo = eve => {
-    let result = `<div class="col-md-12 d-flex flex-column-reverse" >
-                        <table class="table table-striped table-bordered text-white">
-                            <thead>
-                                <tr>
-                                    <th>Sr.no</th>
-                                    <th>Title</th>
-                                    <th>UserId</th>
-                                    <th>
-                                        <select class="form-control select">
-                                            <option value="All">All</option>
-                                            <option value="Complete">Complete</option>
-                                            <option value="Incomplete">Incomplete</option>
-                                        </select>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>`
+    let result = "";
     eve.forEach((ele,i) => {
         result += `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${ele.title}</td>
                     <td>${ele.userId}</td>
-                    <td>${ele.completed ? 'completed' : 'Incomplete'}</td>
+                    <td>${ele.completed ? 'Complete' : 'Incomplete'}</td>
                 </tr>
         `
     })
-    result += `
-                </tbody>
-                    </table>
-                        </div>  
-                            `
-    posts.innerHTML = result;
+    tbody.innerHTML = result;
 }
 
 const addposttemp = eve => {
@@ -107,14 +89,18 @@ const makeApiCall = ((methodname, apiUrl) => {
     xhr.send();
     xhr.onload = () => {
     if(xhr.status >= 200 || xhr.status <= 299 && xhr.readyState === 4){
-        cl(xhr.response);
+        // cl(xhr.response);
         let data = JSON.parse(xhr.response);
         if(methodname === "GET" && apiUrl === posturl){
-            postArray.push(data);
+            array = JSON.parse(xhr.response);
             templatingofPosts(data);
+            todo.classList.add("d-none");
+            posts.classList.remove("d-none");
         }else if(methodname === "GET" && apiUrl === todourl){
-            postArray.push(data);
-            templatingoftodo(data)
+            array = JSON.parse(xhr.response);
+            templatingoftodo(data);
+            posts.classList.add("d-none");
+            todo.classList.remove("d-none");
         }
     }else{
         alert(`something Went wrong !!!`);
@@ -123,12 +109,27 @@ const makeApiCall = ((methodname, apiUrl) => {
 })
 
 
+const onSelect = (eve) => {
+    let getval = eve.target.value;
+    let tr = [...document.querySelectorAll("#tbody tr")];
+    tr.forEach(eve => eve.classList.add("d-none"));
+    tr.forEach(eve => {
+        if(eve.lastElementChild.innerHTML === getval){
+            eve.classList.remove("d-none");
+        }else if(getval === "All"){
+            eve.classList.remove("d-none");
+        }
+    })
+}
+
 const onPostApiCall = () => {
     makeApiCall("GET", posturl);
+    showsidebar.classList.remove("d-none");
 }
 
 const onTodoApiCall = () => {
     makeApiCall("GET", todourl);
+    showsidebar.classList.add("d-none");
 }
 
 const onActive = () => {
@@ -141,9 +142,9 @@ const onActive = () => {
 showsidebar.addEventListener("click", onActive);
 hidesidebar.addEventListener("click", onActive);
 backdrop.addEventListener("click", onActive);
-PostApi.addEventListener("click", onPostApiCall)
-ToDoApi.addEventListener("click", onTodoApiCall)
-
+PostApi.addEventListener("click", onPostApiCall);
+ToDoApi.addEventListener("click", onTodoApiCall);
+statuss.addEventListener("change", onSelect);
 
 
 // const onEdit = eve => {
