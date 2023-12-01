@@ -28,7 +28,7 @@ let posturl = `${baseurl}/posts`;
 let todourl = `${baseurl}/todos`;
 
 const templatingofPosts = eve => {
-    let result = "<div class='col-md-8 offset-md-2 d-flex flex-column-reverse'>";
+    let result = " ";
     eve.forEach(ele => {
         result += `
             <div class="card mb-2" id="${ele.id}">
@@ -45,7 +45,6 @@ const templatingofPosts = eve => {
             </div>
         `
     });
-    result += `</div>`
     posts.innerHTML = result;
 }
 
@@ -81,6 +80,7 @@ const addposttemp = eve => {
             </div>
     `
     posts.append(card);
+    onActive();
 }
 
 const makeApiCall = ((methodname, apiUrl) => {
@@ -108,6 +108,15 @@ const makeApiCall = ((methodname, apiUrl) => {
 }
 })
 
+const onAddPost = eve => {
+    eve.preventDefault();
+    let postobj = {
+        title : titleControl.value,
+        body : bodyControl.value,
+        userId : useridControl.value,
+    }
+    addposttemp(postobj);
+}
 
 const onSelect = (eve) => {
     let getval = eve.target.value;
@@ -137,7 +146,7 @@ const onActive = () => {
     backdrop.classList.toggle("active");
 }
 
-// postform.addEventListener("submit", onAddPost);
+postform.addEventListener("submit", onAddPost);
 // updatebtn.addEventListener("click", onUpdate)
 showsidebar.addEventListener("click", onActive);
 hidesidebar.addEventListener("click", onActive);
