@@ -79,7 +79,7 @@ const addposttemp = eve => {
                 <button class="btn btn-outline-danger" onclick="onRemove(this)">Delete</button>
             </div>
     `
-    posts.append(card);
+    posts.prepend(card);
     onActive();
 }
 
