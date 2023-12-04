@@ -26,6 +26,20 @@ cl(array);
 let baseurl = `https://jsonplaceholder.typicode.com`;
 let posturl = `${baseurl}/posts`;
 let todourl = `${baseurl}/todos`;
+let token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c`
+
+const onEdit = eve => {
+    let getid = eve.closest(".card").id;
+    localStorage.setItem("editId", getid);
+    let editurl = `${baseurl}/posts/${getid}`;
+    makeApiCall("GET", editurl);
+}
+
+const onRemove = eve => {
+    let getcardid = eve.closest(".card").id;
+    let deleteurl = `${baseurl}/posts/${getcardid}`;
+    makeApiCall("DELETE", deleteurl);
+}
 
 const templatingofPosts = eve => {
     let result = " ";
@@ -63,50 +77,122 @@ const templatingoftodo = eve => {
     tbody.innerHTML = result;
 }
 
-const addposttemp = eve => {
-    let card = document.createElement("div");
-    card.className = "card mb-2";
-    card.id = eve.id;
-    card.innerHTML = `
-            <div class="card-header bg-dark text-white">
-                ${eve.title}
-            </div>
-            <div class="card-body">
-                <p>${eve.body}</p>
-            </div>
-            <div class="card-footer d-flex justify-content-between">
-                <button class="btn btn-outline-primary" onclick="onEdit(this)">Edit</button>
-                <button class="btn btn-outline-danger" onclick="onRemove(this)">Delete</button>
-            </div>
-    `
-    posts.prepend(card);
-    onActive();
-}
+// const addposttemp = eve => {
+//     let card = document.createElement("div");
+//     card.className = "card mb-2";
+//     card.id = eve.id;
+//     card.innerHTML = `
+//             <div class="card-header bg-dark text-white">
+//                 ${eve.title}
+//             </div>
+//             <div class="card-body">
+//                 <p>${eve.body}</p>
+//             </div>
+//             <div class="card-footer d-flex justify-content-between">
+//                 <button class="btn btn-outline-primary" onclick="onEdit(this)">Edit</button>
+//                 <button class="btn btn-outline-danger" onclick="onRemove(this)">Delete</button>
+//             </div>
+//     `
+//     posts.prepend(card);
+//     onActive();
+// }
 
-const makeApiCall = ((methodname, apiUrl) => {
+const makeApiCall = ((methodname, apiUrl, bodymsg = null) => {
+    loader.classList.remove("d-none");
     let xhr = new XMLHttpRequest();
     xhr.open(methodname, apiUrl);
-    xhr.send();
+    xhr.setRequestHeader('token', token);
+    xhr.setRequestHeader('content-type', 'application/JSON')
+    xhr.send(JSON.stringify(bodymsg));
     xhr.onload = () => {
+    loader.classList.add("d-none");
     if(xhr.status >= 200 || xhr.status <= 299 && xhr.readyState === 4){
         // cl(xhr.response);
-        let data = JSON.parse(xhr.response);
-        if(methodname === "GET" && apiUrl === posturl){
+        // let data = JSON.parse(xhr.response);
+        if(methodname === "GET" && apiUrl === todourl){
             array = JSON.parse(xhr.response);
-            templatingofPosts(data);
-            todo.classList.add("d-none");
-            posts.classList.remove("d-none");
-        }else if(methodname === "GET" && apiUrl === todourl){
-            array = JSON.parse(xhr.response);
-            templatingoftodo(data);
+            templatingoftodo(array);
             posts.classList.add("d-none");
             todo.classList.remove("d-none");
+        }else if(methodname === "GET"){
+            array = JSON.parse(xhr.response);
+            if(Array.isArray(array)){
+                templatingofPosts(array);
+                todo.classList.add("d-none");
+                posts.classList.remove("d-none");
+            }else{
+                addbtn.classList.add("d-none");
+                updatebtn.classList.remove("d-none");
+                titleControl.value = array.title;
+                bodyControl.value = array.body;
+                useridControl.value = array.userId;
+                onActive();
+            }
+        }else if(methodname === "PUT"){
+            let updtdid = JSON.parse(xhr.response).id;
+            let getcard = document.getElementById(updtdid);
+            let childcards = [...getcard.children];//returns htmlcollection
+            childcards[0].innerHTML = `<h2>${bodymsg.title}</h2>`
+            childcards[1].innerHTML = `<p>${bodymsg.body}</p>`
+            postform.reset();
+            updatebtn.classList.add("d-none");
+            addbtn.classList.remove("d-none");
+            onActive();
+        }else if(methodname === "DELETE"){
+            let getconfirmation = confirm('are you sure, you want to delete post!')
+            if(getconfirmation){
+                let getindex = apiUrl.indexOf("posts/");
+                let getid = apiUrl.slice(getindex + 6);
+                let card = document.getElementById(getid);
+                card.remove();
+            }else{
+                return;
+            }
+        }else if(methodname === "POST"){
+            let card = document.createElement("div");
+            card.className = "card mb-2";
+            card.id = JSON.parse(xhr.response).id;
+            card.innerHTML = `
+                <div class="card-header bg-dark text-white">
+                    ${bodymsg.title}
+                </div>
+                <div class="card-body">
+                    <p>${bodymsg.body}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button class="btn btn-outline-primary" onclick="onEdit(this)">Edit</button>
+                    <button class="btn btn-outline-danger" onclick="onRemove(this)">Delete</button>
+                </div>
+                `
+                posts.prepend(card);
+                postform.reset();
+                onActive();
+        }else{
+            alert(`something went wrong`);
         }
+
+
+        
     }else{
         alert(`something Went wrong !!!`);
     }
 }
+    xhr.onerror = function(){
+        loader.classList.add("d-none");
+    }
 })
+
+const onUpdate = () => {
+    let updtobj = {
+        title  : titleControl.value,
+        body : bodyControl.value,
+        userId : useridControl.value
+    }
+    cl(updtobj);
+    let updtid = localStorage.getItem("editId");
+    let updturl = `${baseurl}/posts/${updtid}`
+    makeApiCall("PUT", updturl, updtobj);
+}
 
 const onAddPost = eve => {
     eve.preventDefault();
@@ -115,7 +201,7 @@ const onAddPost = eve => {
         body : bodyControl.value,
         userId : useridControl.value,
     }
-    addposttemp(postobj);
+    makeApiCall("POST", posturl, postobj);
 }
 
 const onSelect = (eve) => {
@@ -147,7 +233,7 @@ const onActive = () => {
 }
 
 postform.addEventListener("submit", onAddPost);
-// updatebtn.addEventListener("click", onUpdate)
+updatebtn.addEventListener("click", onUpdate)
 showsidebar.addEventListener("click", onActive);
 hidesidebar.addEventListener("click", onActive);
 backdrop.addEventListener("click", onActive);
